@@ -1,0 +1,8 @@
+Django>=4.2,<6.0
+langchain
+langchain-community
+sentence-transformers
+psycopg2-binary
+pgvector
+PyMuPDF
+django-cors-headers

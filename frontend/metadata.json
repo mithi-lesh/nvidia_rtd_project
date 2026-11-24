@@ -1,0 +1,6 @@
+{
+  "name": "MineSecure AI",
+  "description": "AI-Powered Safety Knowledge Assistant & Integrated Operational Safety Management Platform.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

@@ -1,0 +1,1772 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mine Safety RAG Assistant — Project Presentation</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600&display=swap"
+    rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL@20..48,100..700,0..1"
+    rel="stylesheet">
+  <style>
+    :root {
+      --bg-dark: #0a0e1a;
+      --bg-card: rgba(15, 23, 42, 0.85);
+      --bg-card-alt: rgba(30, 41, 59, 0.6);
+      --accent: #38bdf8;
+      --accent-green: #34d399;
+      --accent-amber: #fbbf24;
+      --accent-rose: #f43f5e;
+      --accent-violet: #a78bfa;
+      --text-primary: #f1f5f9;
+      --text-secondary: #94a3b8;
+      --text-muted: #64748b;
+      --border: rgba(148, 163, 184, 0.12);
+      --glow: 0 0 60px rgba(56, 189, 248, 0.15);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg-dark);
+      color: var(--text-primary);
+      overflow: hidden;
+      height: 100vh;
+      width: 100vw;
+    }
+
+    /* ─── Slide Container ─── */
+    .presentation {
+      width: 100vw;
+      height: 100vh;
+      position: relative;
+    }
+
+    .slide {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 60px 80px;
+      opacity: 0;
+      visibility: hidden;
+      transform: translateX(60px);
+      transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .slide.active {
+      opacity: 1;
+      visibility: visible;
+      transform: translateX(0);
+    }
+
+    .slide.exit {
+      opacity: 0;
+      transform: translateX(-60px);
+    }
+
+    /* ─── Background Effects ─── */
+    .bg-grid {
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(56, 189, 248, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(56, 189, 248, 0.03) 1px, transparent 1px);
+      background-size: 60px 60px;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    .bg-glow-1 {
+      position: fixed;
+      top: -200px;
+      left: -200px;
+      width: 600px;
+      height: 600px;
+      background: radial-gradient(circle, rgba(56, 189, 248, 0.08), transparent 70%);
+      z-index: 0;
+      pointer-events: none;
+      animation: float-slow 20s ease-in-out infinite;
+    }
+
+    .bg-glow-2 {
+      position: fixed;
+      bottom: -200px;
+      right: -200px;
+      width: 500px;
+      height: 500px;
+      background: radial-gradient(circle, rgba(167, 139, 250, 0.06), transparent 70%);
+      z-index: 0;
+      pointer-events: none;
+      animation: float-slow 25s ease-in-out infinite reverse;
+    }
+
+    @keyframes float-slow {
+
+      0%,
+      100% {
+        transform: translate(0, 0);
+      }
+
+      50% {
+        transform: translate(30px, 20px);
+      }
+    }
+
+    /* ─── Navigation ─── */
+    .nav-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 40px;
+      background: rgba(10, 14, 26, 0.92);
+      backdrop-filter: blur(20px);
+      border-top: 1px solid var(--border);
+    }
+
+    .nav-info {
+      font-size: 13px;
+      color: var(--text-muted);
+      font-weight: 500;
+      letter-spacing: 0.5px;
+    }
+
+    .nav-info .current {
+      color: var(--accent);
+      font-weight: 700;
+    }
+
+    .nav-progress {
+      flex: 1;
+      max-width: 400px;
+      margin: 0 30px;
+      height: 3px;
+      background: rgba(148, 163, 184, 0.1);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .nav-progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent), var(--accent-violet));
+      border-radius: 3px;
+      transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .nav-buttons {
+      display: flex;
+      gap: 10px;
+    }
+
+    .nav-btn {
+      width: 40px;
+      height: 40px;
+      border: 1px solid var(--border);
+      background: var(--bg-card);
+      color: var(--text-primary);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-size: 20px;
+    }
+
+    .nav-btn:hover {
+      background: rgba(56, 189, 248, 0.1);
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .nav-btn:disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+    }
+
+    /* ─── Typography ─── */
+    .slide-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: var(--accent);
+      background: rgba(56, 189, 248, 0.08);
+      border: 1px solid rgba(56, 189, 248, 0.2);
+      padding: 6px 14px;
+      border-radius: 6px;
+      margin-bottom: 20px;
+    }
+
+    .slide-tag.green {
+      color: var(--accent-green);
+      background: rgba(52, 211, 153, 0.08);
+      border-color: rgba(52, 211, 153, 0.2);
+    }
+
+    .slide-tag.amber {
+      color: var(--accent-amber);
+      background: rgba(251, 191, 36, 0.08);
+      border-color: rgba(251, 191, 36, 0.2);
+    }
+
+    .slide-tag.rose {
+      color: var(--accent-rose);
+      background: rgba(244, 63, 94, 0.08);
+      border-color: rgba(244, 63, 94, 0.2);
+    }
+
+    .slide-tag.violet {
+      color: var(--accent-violet);
+      background: rgba(167, 139, 250, 0.08);
+      border-color: rgba(167, 139, 250, 0.2);
+    }
+
+    h1.hero {
+      font-size: 56px;
+      font-weight: 900;
+      line-height: 1.1;
+      letter-spacing: -2px;
+      margin-bottom: 16px;
+      background: linear-gradient(135deg, #f1f5f9 0%, #38bdf8 50%, #a78bfa 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    h2.slide-title {
+      font-size: 42px;
+      font-weight: 800;
+      line-height: 1.15;
+      letter-spacing: -1.5px;
+      margin-bottom: 12px;
+    }
+
+    h3.section-title {
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 12px;
+      color: var(--text-primary);
+    }
+
+    .subtitle {
+      font-size: 18px;
+      color: var(--text-secondary);
+      font-weight: 400;
+      line-height: 1.6;
+      max-width: 700px;
+    }
+
+    .subtitle-sm {
+      font-size: 15px;
+      color: var(--text-secondary);
+      font-weight: 400;
+      line-height: 1.7;
+    }
+
+    /* ─── Cards / Boxes ─── */
+    .card-grid {
+      display: grid;
+      gap: 20px;
+      width: 100%;
+      max-width: 1100px;
+    }
+
+    .card-grid.cols-2 {
+      grid-template-columns: 1fr 1fr;
+    }
+
+    .card-grid.cols-3 {
+      grid-template-columns: 1fr 1fr 1fr;
+    }
+
+    .card-grid.cols-4 {
+      grid-template-columns: 1fr 1fr 1fr 1fr;
+    }
+
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 28px;
+      backdrop-filter: blur(12px);
+      transition: all 0.3s;
+    }
+
+    .card:hover {
+      border-color: rgba(56, 189, 248, 0.3);
+      box-shadow: var(--glow);
+      transform: translateY(-2px);
+    }
+
+    .card-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 16px;
+      font-size: 22px;
+    }
+
+    .card-icon.blue {
+      background: rgba(56, 189, 248, 0.12);
+      color: var(--accent);
+    }
+
+    .card-icon.green {
+      background: rgba(52, 211, 153, 0.12);
+      color: var(--accent-green);
+    }
+
+    .card-icon.amber {
+      background: rgba(251, 191, 36, 0.12);
+      color: var(--accent-amber);
+    }
+
+    .card-icon.rose {
+      background: rgba(244, 63, 94, 0.12);
+      color: var(--accent-rose);
+    }
+
+    .card-icon.violet {
+      background: rgba(167, 139, 250, 0.12);
+      color: var(--accent-violet);
+    }
+
+    .card h4 {
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .card p {
+      font-size: 13px;
+      color: var(--text-secondary);
+      line-height: 1.7;
+    }
+
+    /* ─── Code Block ─── */
+    .code-block {
+      background: rgba(2, 6, 23, 0.8);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px 24px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      line-height: 1.8;
+      color: #e2e8f0;
+      overflow-x: auto;
+      max-width: 100%;
+    }
+
+    .code-block .keyword {
+      color: var(--accent-violet);
+    }
+
+    .code-block .string {
+      color: var(--accent-green);
+    }
+
+    .code-block .comment {
+      color: var(--text-muted);
+      font-style: italic;
+    }
+
+    .code-block .func {
+      color: var(--accent-amber);
+    }
+
+    .code-block .type {
+      color: var(--accent);
+    }
+
+    /* ─── Flow Diagram ─── */
+    .flow-diagram {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin: 20px 0;
+    }
+
+    .flow-step {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      padding: 16px 20px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      min-width: 120px;
+      text-align: center;
+      transition: all 0.3s;
+    }
+
+    .flow-step:hover {
+      border-color: var(--accent);
+      transform: translateY(-3px);
+      box-shadow: var(--glow);
+    }
+
+    .flow-step .material-symbols-outlined {
+      font-size: 28px;
+      color: var(--accent);
+    }
+
+    .flow-step span:last-child {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-secondary);
+    }
+
+    .flow-arrow {
+      font-size: 22px;
+      color: var(--text-muted);
+      padding: 0 6px;
+    }
+
+    /* ─── Table ─── */
+    .styled-table {
+      width: 100%;
+      max-width: 1000px;
+      border-collapse: collapse;
+      border-radius: 12px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+    }
+
+    .styled-table th {
+      background: rgba(56, 189, 248, 0.08);
+      padding: 14px 20px;
+      text-align: left;
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--accent);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .styled-table td {
+      padding: 12px 20px;
+      font-size: 14px;
+      color: var(--text-secondary);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .styled-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .styled-table tr:hover td {
+      background: rgba(56, 189, 248, 0.03);
+      color: var(--text-primary);
+    }
+
+    .tech-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 6px;
+      border: 1px solid;
+      margin: 2px 3px;
+    }
+
+    .tech-badge.blue {
+      color: var(--accent);
+      border-color: rgba(56, 189, 248, 0.3);
+      background: rgba(56, 189, 248, 0.06);
+    }
+
+    .tech-badge.green {
+      color: var(--accent-green);
+      border-color: rgba(52, 211, 153, 0.3);
+      background: rgba(52, 211, 153, 0.06);
+    }
+
+    .tech-badge.amber {
+      color: var(--accent-amber);
+      border-color: rgba(251, 191, 36, 0.3);
+      background: rgba(251, 191, 36, 0.06);
+    }
+
+    .tech-badge.violet {
+      color: var(--accent-violet);
+      border-color: rgba(167, 139, 250, 0.3);
+      background: rgba(167, 139, 250, 0.06);
+    }
+
+    .tech-badge.rose {
+      color: var(--accent-rose);
+      border-color: rgba(244, 63, 94, 0.3);
+      background: rgba(244, 63, 94, 0.06);
+    }
+
+    /* ─── Stat Box ─── */
+    .stat-box {
+      text-align: center;
+      padding: 24px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+    }
+
+    .stat-box .stat-value {
+      font-size: 36px;
+      font-weight: 900;
+      background: linear-gradient(135deg, var(--accent), var(--accent-violet));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .stat-box .stat-label {
+      font-size: 12px;
+      color: var(--text-muted);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-top: 6px;
+    }
+
+    /* ─── List styles ─── */
+    .bullet-list {
+      list-style: none;
+      padding: 0;
+    }
+
+    .bullet-list li {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      margin-bottom: 14px;
+      font-size: 15px;
+      color: var(--text-secondary);
+      line-height: 1.6;
+    }
+
+    .bullet-list li::before {
+      content: '';
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--accent);
+      flex-shrink: 0;
+      margin-top: 8px;
+    }
+
+    .bullet-list.green li::before {
+      background: var(--accent-green);
+    }
+
+    .bullet-list.amber li::before {
+      background: var(--accent-amber);
+    }
+
+    .bullet-list.rose li::before {
+      background: var(--accent-rose);
+    }
+
+    .numbered-list {
+      list-style: none;
+      counter-reset: item;
+      padding: 0;
+    }
+
+    .numbered-list li {
+      counter-increment: item;
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      margin-bottom: 16px;
+      font-size: 14px;
+      color: var(--text-secondary);
+      line-height: 1.7;
+    }
+
+    .numbered-list li::before {
+      content: counter(item);
+      width: 28px;
+      height: 28px;
+      background: rgba(56, 189, 248, 0.1);
+      color: var(--accent);
+      border: 1px solid rgba(56, 189, 248, 0.25);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 12px;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    /* ─── Layouts ─── */
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 40px;
+      width: 100%;
+      max-width: 1100px;
+      align-items: start;
+    }
+
+    .full-width {
+      width: 100%;
+      max-width: 1100px;
+    }
+
+    .text-center {
+      text-align: center;
+    }
+
+    .gap-sm {
+      gap: 12px;
+    }
+
+    .mt-20 {
+      margin-top: 20px;
+    }
+
+    .mt-30 {
+      margin-top: 30px;
+    }
+
+    .mb-10 {
+      margin-bottom: 10px;
+    }
+
+    .mb-20 {
+      margin-bottom: 20px;
+    }
+
+    /* ─── Animations ─── */
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .slide.active .animate-in {
+      animation: fadeInUp 0.6s ease forwards;
+    }
+
+    .slide.active .delay-1 {
+      animation-delay: 0.1s;
+      opacity: 0;
+    }
+
+    .slide.active .delay-2 {
+      animation-delay: 0.2s;
+      opacity: 0;
+    }
+
+    .slide.active .delay-3 {
+      animation-delay: 0.3s;
+      opacity: 0;
+    }
+
+    .slide.active .delay-4 {
+      animation-delay: 0.4s;
+      opacity: 0;
+    }
+
+    .slide.active .delay-5 {
+      animation-delay: 0.5s;
+      opacity: 0;
+    }
+
+    .slide.active .delay-6 {
+      animation-delay: 0.6s;
+      opacity: 0;
+    }
+
+    /* ─── Keyboard hints ─── */
+    .key-hint {
+      position: fixed;
+      bottom: 70px;
+      right: 40px;
+      font-size: 11px;
+      color: var(--text-muted);
+      z-index: 101;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    kbd {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-family: 'Inter', sans-serif;
+      font-size: 11px;
+    }
+
+    /* ─── Architecture Diagram ─── */
+    .arch-diagram {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      width: 100%;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    .arch-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      width: 100%;
+    }
+
+    .arch-box {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px 24px;
+      text-align: center;
+      min-width: 160px;
+      transition: all 0.3s;
+    }
+
+    .arch-box:hover {
+      border-color: var(--accent);
+      box-shadow: var(--glow);
+    }
+
+    .arch-box .label {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .arch-box .sublabel {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .arch-box.highlight {
+      border-color: rgba(56, 189, 248, 0.3);
+      background: rgba(56, 189, 248, 0.05);
+    }
+
+    .arch-arrow {
+      color: var(--text-muted);
+      font-size: 18px;
+      text-align: center;
+    }
+
+    /* ─── Gap Item ─── */
+    .gap-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      padding: 16px 20px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      margin-bottom: 12px;
+      transition: all 0.3s;
+    }
+
+    .gap-item:hover {
+      border-color: var(--accent-rose);
+    }
+
+    .gap-item .icon-wrap {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      font-size: 18px;
+    }
+
+    .gap-item .icon-wrap.rose {
+      background: rgba(244, 63, 94, 0.12);
+      color: var(--accent-rose);
+    }
+
+    .gap-item .icon-wrap.green {
+      background: rgba(52, 211, 153, 0.12);
+      color: var(--accent-green);
+    }
+
+    .gap-item h5 {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 4px;
+    }
+
+    .gap-item p {
+      font-size: 12px;
+      color: var(--text-secondary);
+      line-height: 1.6;
+    }
+
+    /* Thank You Slide */
+    .thank-you-icon {
+      width: 80px;
+      height: 80px;
+      border-radius: 20px;
+      background: linear-gradient(135deg, rgba(56, 189, 248, 0.15), rgba(167, 139, 250, 0.15));
+      border: 1px solid rgba(56, 189, 248, 0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 30px;
+    }
+
+    .thank-you-icon .material-symbols-outlined {
+      font-size: 40px;
+      background: linear-gradient(135deg, var(--accent), var(--accent-violet));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    /* ─── Fullscreen Button ─── */
+    .fullscreen-btn {
+      width: 40px;
+      height: 40px;
+      border: 1px solid var(--border);
+      background: var(--bg-card);
+      color: var(--text-primary);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-size: 20px;
+      margin-left: 6px;
+    }
+
+    .fullscreen-btn:hover {
+      background: rgba(52, 211, 153, 0.1);
+      border-color: var(--accent-green);
+      color: var(--accent-green);
+    }
+
+    /* Hide UI chrome when in true fullscreen */
+    :fullscreen .nav-bar,
+    :-webkit-full-screen .nav-bar {
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s;
+    }
+
+    :fullscreen .nav-bar:hover,
+    :-webkit-full-screen .nav-bar:hover {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    :fullscreen .key-hint,
+    :-webkit-full-screen .key-hint {
+      display: none;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="bg-grid"></div>
+  <div class="bg-glow-1"></div>
+  <div class="bg-glow-2"></div>
+
+  <div class="presentation" id="presentation">
+
+    <!-- ═════════════════════════════════════════════ -->
+    <!-- SLIDE 1: Title Slide                          -->
+    <!-- ═════════════════════════════════════════════ -->
+    <div class="slide active text-center" data-slide="0">
+      <div class="animate-in delay-1">
+        <span class="slide-tag">
+          <span class="material-symbols-outlined" style="font-size:14px">shield</span>
+          NVIDIA RTD Project Presentation
+        </span>
+      </div>
+      <h1 class="hero animate-in delay-2">Mine Safety RAG Assistant (PS148)</h1>
+      <h4 class="hero animate-in delay-2">by Mithilesh N A</h4>
+
+      <p class="subtitle animate-in delay-3" style="max-width:650px">
+        An AI-powered Retrieval-Augmented Generation chatbot for real-time mine, oil & gas safety compliance — answering
+        questions exclusively from approved safety manuals with source citations.
+      </p>
+      <div style="display:flex; gap:12px; margin-top:30px" class="animate-in delay-4">
+        <span class="tech-badge blue">Django</span>
+        <span class="tech-badge green">React + Vite</span>
+        <span class="tech-badge violet">Ollama LLM</span>
+        <span class="tech-badge amber">Supabase pgvector</span>
+        <span class="tech-badge rose">RAG Pipeline</span>
+      </div>
+      <p style="font-size:13px; color:var(--text-muted); margin-top: 36px" class="animate-in delay-5">
+        Press <kbd>→</kbd> or click <b>Next</b> to begin
+      </p>
+    </div>
+
+    <!-- ═════════════════════════════════════════════ -->
+    <!-- SLIDE 2: Problem Identification               -->
+    <!-- ═════════════════════════════════════════════ -->
+    <div class="slide" data-slide="1">
+      <div class="full-width">
+        <div class="animate-in delay-1">
+          <span class="slide-tag rose">
+            <span class="material-symbols-outlined" style="font-size:14px">warning</span>
+            Problem Identification & Project Relevance
+          </span>
+          <h2 class="slide-title">Why This Problem Matters</h2>
+          <p class="subtitle-sm mb-20" style="max-width:700px">Mining remains one of the world's most hazardous
+            industries. Workers need instant, reliable access to approved safety procedures — not generic internet
+            searches.</p>
+        </div>
+
+        <div class="card-grid cols-2 animate-in delay-2">
+          <div class="card">
+            <div class="card-icon rose">
+              <span class="material-symbols-outlined">dangerous</span>
+            </div>
+            <h4>The Problem</h4>
+            <ul class="bullet-list rose" style="margin-top:10px">
+              <li>Safety manuals are lengthy PDFs (100s of pages), hard to search during emergencies</li>
+              <li>Workers cannot quickly locate specific SOPs for blasting, PPE, or evacuation</li>
+              <li>Generic AI chatbots may hallucinate incorrect safety procedures — risking lives</li>
+              <li>No existing system answers mine-safety queries from verified, organization-approved documents</li>
+            </ul>
+          </div>
+
+          <div class="card">
+            <div class="card-icon green">
+              <span class="material-symbols-outlined">lightbulb</span>
+            </div>
+            <h4>Our Solution</h4>
+            <ul class="bullet-list green" style="margin-top:10px">
+              <li>A RAG-based chatbot that retrieves answers <b>only</b> from uploaded, approved safety manuals</li>
+              <li>Source citations with every answer (document name + page number) for verifiability</li>
+              <li>Hallucination prevention: refuses to answer if info is not in the approved documents</li>
+              <li>Fully offline & local — ideal for mine sites with restricted or no internet</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="card-grid cols-4 mt-20 animate-in delay-3">
+          <div class="stat-box">
+            <div class="stat-value">2,700+</div>
+            <div class="stat-label">Mine deaths/year (ILO)</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-value">100s</div>
+            <div class="stat-label">Pages per SOP manual</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-value">0</div>
+            <div class="stat-label">Hallucinations allowed</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-value">100%</div>
+            <div class="stat-label">Offline capable</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═════════════════════════════════════════════ -->
+    <!-- SLIDE 3: Literature Survey                     -->
+    <!-- ═════════════════════════════════════════════ -->
+    <div class="slide" data-slide="2">
+      <div class="full-width">
+        <div class="animate-in delay-1">
+          <span class="slide-tag amber">
+            <span class="material-symbols-outlined" style="font-size:14px">menu_book</span>
+            Literature Survey & Gap Identification
+          </span>
+          <h2 class="slide-title">Existing Work & Research Gaps</h2>
+        </div>
+
+        <div class="two-col mt-20">
+          <div class="animate-in delay-2">
+            <h3 class="section-title">Literature Reviewed</h3>
+            <table class="styled-table">
+              <thead>
+                <tr>
+                  <th>Research Area</th>
+                  <th>Key Findings</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><b>RAG Frameworks</b><br><span style="font-size:11px;color:var(--text-muted)">Lewis et al.,
+                      2020</span></td>
+                  <td>RAG reduces hallucination by grounding LLM answers in retrieved documents</td>
+                </tr>
+                <tr>
+                  <td><b>LLMs for Safety</b><br><span style="font-size:11px;color:var(--text-muted)">Touvron et al.,
+                      2023</span></td>
+                  <td>Open-source LLMs (LLaMA, Qwen) reach near-GPT quality for domain QA tasks</td>
+                </tr>
+                <tr>
+                  <td><b>Vector Search</b><br><span style="font-size:11px;color:var(--text-muted)">Johnson et al.,
+                      2019</span></td>
+                  <td>pgvector + cosine similarity provides fast, accurate semantic retrieval</td>
+                </tr>
+                <tr>
+                  <td><b>Mine Safety AI</b><br><span style="font-size:11px;color:var(--text-muted)">Various,
+                      2021-24</span></td>
+                  <td>Existing systems focus on sensor data, gas detection — not document QA</td>
+                </tr>
+                <tr>
+                  <td><b>BGE Embeddings</b><br><span style="font-size:11px;color:var(--text-muted)">Xiao et al.,
+                      2023</span></td>
+                  <td>BGE-small achieves top MTEB retrieval scores with just 384 dimensions</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="animate-in delay-3">
+            <h3 class="section-title">Identified Gaps</h3>
+            <div class="gap-item">
+              <div class="icon-wrap rose"><span class="material-symbols-outlined">block</span></div>
+              <div>
+                <h5>No Mine-Specific RAG System</h5>
+                <p>Existing RAG demos target general QA (Wikipedia, legal). No system targets mine/oil/gas safety SOP
+                  documents specifically.</p>
+              </div>
+            </div>
+            <div class="gap-item">
+              <div class="icon-wrap rose"><span class="material-symbols-outlined">cloud_off</span></div>
+              <div>
+                <h5>Cloud Dependency</h5>
+                <p>Most AI chatbots require internet (GPT-4, Claude). Mine sites are often underground with no
+                  connectivity.</p>
+              </div>
+            </div>
+            <div class="gap-item">
+              <div class="icon-wrap rose"><span class="material-symbols-outlined">psychology_alt</span></div>
+              <div>
+                <h5>No Hallucination Guard</h5>
+                <p>General chatbots fabricate answers when uncertain — unacceptable for safety-critical operations.</p>
+              </div>
+            </div>
+            <div class="gap-item">
+              <div class="icon-wrap rose"><span class="material-symbols-outlined">source</span></div>
+              <div>
+                <h5>No Source Attribution</h5>
+                <p>Existing solutions don't cite which manual/page the answer came from, reducing trust and
+                  auditability.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═════════════════════════════════════════════ -->
+    <!-- SLIDE 4: Objectives                            -->
+    <!-- ═════════════════════════════════════════════ -->
+    <div class="slide" data-slide="3">
+      <div class="full-width">
+        <div class="animate-in delay-1">
+          <span class="slide-tag green">
+            <span class="material-symbols-outlined" style="font-size:14px">flag</span>
+            Objectives
+          </span>
+          <h2 class="slide-title">Project Objectives</h2>
+          <p class="subtitle-sm mb-20" style="max-width: 600px">We set five concrete objectives to bridge the identified
+            gaps.</p>
+        </div>
+
+        <div class="card-grid cols-3 animate-in delay-2">
+          <div class="card" style="border-left: 3px solid var(--accent)">
+            <div class="card-icon blue"><span class="material-symbols-outlined">smart_toy</span></div>
+            <h4>Objective 1</h4>
+            <p>Build a RAG-based chatbot that answers mine safety questions using <b>only approved documents</b> as the
+              knowledge base.</p>
+          </div>
+          <div class="card" style="border-left: 3px solid var(--accent-green)">
+            <div class="card-icon green"><span class="material-symbols-outlined">format_quote</span></div>
+            <h4>Objective 2</h4>
+            <p>Provide verifiable <b>source citations</b> (document name + page number) with every answer for audit
+              compliance.</p>
+          </div>
+          <div class="card" style="border-left: 3px solid var(--accent-amber)">
+            <div class="card-icon amber"><span class="material-symbols-outlined">wifi_off</span></div>
+            <h4>Objective 3</h4>
+            <p>Ensure the system runs <b>100% offline</b> using Ollama-hosted local LLMs — no cloud dependency required.
+            </p>
+          </div>
+        </div>
+
+        <div class="card-grid cols-2 mt-20 animate-in delay-3">
+          <div class="card" style="border-left: 3px solid var(--accent-rose)">
+            <div class="card-icon rose"><span class="material-symbols-outlined">shield</span></div>
+            <h4>Objective 4</h4>
+            <p>Implement <b>hallucination prevention</b> — the system explicitly says "information not found" instead of
+              guessing unsafe procedures.</p>
+          </div>
+          <div class="card" style="border-left: 3px solid var(--accent-violet)">
+            <div class="card-icon violet"><span class="material-symbols-outlined">admin_panel_settings</span></div>
+            <h4>Objective 5</h4>
+            <p>Provide an <b>admin document management portal</b> to upload, delete, and re-index safety PDFs without
+              any coding knowledge.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═════════════════════════════════════════════ -->
+    <!-- SLIDE 5: Proposed Methodology                  -->
+    <!-- ═════════════════════════════════════════════ -->
+    <div class="slide" data-slide="4">
+      <div class="full-width">
+        <div class="animate-in delay-1">
+          <span class="slide-tag violet">
+            <span class="material-symbols-outlined" style="font-size:14px">architecture</span>
+            Proposed Methodology
+          </span>
+          <h2 class="slide-title">System Architecture & RAG Pipeline</h2>
+        </div>
+
+        <div class="flow-diagram animate-in delay-2" style="margin-bottom: 30px">
+          <div class="flow-step">
+            <span class="material-symbols-outlined">upload_file</span>
+            <span>PDF Upload<br>(Admin Portal)</span>
+          </div>
+          <span class="flow-arrow">→</span>
+          <div class="flow-step">
+            <span class="material-symbols-outlined" style="color:var(--accent-green)">text_snippet</span>
+            <span>Text Extraction<br>(PyMuPDF)</span>
+          </div>
+          <span class="flow-arrow">→</span>
+          <div class="flow-step">
+            <span class="material-symbols-outlined" style="color:var(--accent-amber)">content_cut</span>
+            <span>Chunking<br>(700 chars, 150 overlap)</span>
+          </div>
+          <span class="flow-arrow">→</span>
+          <div class="flow-step">
+            <span class="material-symbols-outlined" style="color:var(--accent-violet)">hub</span>
+            <span>Embedding<br>(BGE-small 384d)</span>
+          </div>
+          <span class="flow-arrow">→</span>
+          <div class="flow-step">
+            <span class="material-symbols-outlined" style="color:var(--accent-rose)">database</span>
+            <span>Supabase<br>(pgvector Store)</span>
+          </div>
+        </div>
+
+        <div class="flow-diagram animate-in delay-3">
+          <div class="flow-step">
+            <span class="material-symbols-outlined">chat</span>
+            <span>User Question<br>(React UI)</span>
+          </div>
+          <span class="flow-arrow">→</span>
+          <div class="flow-step">
+            <span class="material-symbols-outlined" style="color:var(--accent-violet)">hub</span>
+            <span>Query Embedding<br>(BGE-small)</span>
+          </div>
+          <span class="flow-arrow">→</span>
+          <div class="flow-step">
+            <span class="material-symbols-outlined" style="color:var(--accent-amber)">search</span>
+            <span>Cosine Similarity<br>(Top-4 Retrieval)</span>
+          </div>
+          <span class="flow-arrow">→</span>
+          <div class="flow-step">
+            <span class="material-symbols-outlined" style="color:var(--accent-green)">psychology</span>
+            <span>LLM Generation<br>(Ollama / Llama 3.2)</span>
+          </div>
+          <span class="flow-arrow">→</span>
+          <div class="flow-step">
+            <span class="material-symbols-outlined" style="color:var(--accent-rose)">verified</span>
+            <span>Answer + Citations<br>(JSON Response)</span>
+          </div>
+        </div>
+
+        <div class="two-col mt-30 animate-in delay-4">
+          <div>
+            <h3 class="section-title">Technology Stack</h3>
+            <table class="styled-table">
+              <thead>
+                <tr>
+                  <th>Layer</th>
+                  <th>Technology</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Frontend</td>
+                  <td><span class="tech-badge green">React</span> <span class="tech-badge blue">Vite</span> <span
+                      class="tech-badge violet">TypeScript</span></td>
+                </tr>
+                <tr>
+                  <td>Backend</td>
+                  <td><span class="tech-badge amber">Django</span> <span class="tech-badge green">LangChain</span></td>
+                </tr>
+                <tr>
+                  <td>LLM</td>
+                  <td><span class="tech-badge rose">Ollama</span> <span class="tech-badge violet">Llama 3.2 : 3B</span>
+                  </td>
+                </tr>
+                <tr>
+                  <td>Embeddings</td>
+                  <td><span class="tech-badge blue">BAAI/bge-small-en-v1.5</span></td>
+                </tr>
+                <tr>
+                  <td>Vector DB</td>
+                  <td><span class="tech-badge amber">Supabase</span> <span class="tech-badge green">pgvector</span></td>
+                </tr>
+                <tr>
+                  <td>PDF Parsing</td>
+                  <td><span class="tech-badge violet">PyMuPDF (fitz)</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div>
+            <h3 class="section-title">Key Design Decisions</h3>
+            <ol class="numbered-list">
+              <li><b>Offline-first:</b> Ollama runs locally — no API keys, no cloud, no internet required at inference
+                time.</li>
+              <li><b>Overlap chunking (150 chars):</b> Prevents context from being cut mid-sentence at chunk boundaries.
+              </li>
+              <li><b>BGE-small embeddings:</b> Only 384 dimensions — fast, memory-efficient, yet top-tier retrieval
+                accuracy.</li>
+              <li><b>Decoupled architecture:</b> React frontend can be deployed independently from the Django API
+                backend.</li>
+            </ol>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═════════════════════════════════════════════ -->
+    <!-- SLIDE 6: Technical Understanding               -->
+    <!-- ═════════════════════════════════════════════ -->
+    <div class="slide" data-slide="5">
+      <div class="full-width">
+        <div class="animate-in delay-1">
+          <span class="slide-tag">
+            <span class="material-symbols-outlined" style="font-size:14px">code</span>
+            Technical Understanding
+          </span>
+          <h2 class="slide-title">Core Implementation Details</h2>
+        </div>
+
+        <div class="two-col mt-20">
+          <div class="animate-in delay-2">
+            <h3 class="section-title">Hallucination Prevention Prompt</h3>
+            <div class="code-block">
+              <span class="comment"># System prompt enforces factual grounding</span>
+              <span class="keyword">PROMPT</span> = <span class="string">"""You are a Mine Safety Assistant.
+
+                Context from approved manuals:
+                -----
+                {context}
+                -----
+
+                Question: {question}
+
+                Instructions:
+                - Answer ONLY using the provided context.
+                - If the context does not contain the
+                answer, clearly state it is unavailable.
+                - Cite the source document and page.
+                - Do NOT guess or fabricate procedures.
+                """</span>
+            </div>
+
+            <h3 class="section-title mt-30">Vector Retrieval (Cosine Similarity)</h3>
+            <div class="code-block">
+              <span class="keyword">from</span> pgvector.django <span class="keyword">import</span> CosineDistance
+
+              <span class="keyword">def</span> <span class="func">retrieve_context</span>(query, top_k=<span
+                class="string">4</span>):
+              query_embedding = <span class="func">get_embedding</span>(query)
+              chunks = Chunk.objects.<span class="func">order_by</span>(
+              <span class="func">CosineDistance</span>(
+              <span class="string">'embedding'</span>, query_embedding
+              )
+              )[:<span class="type">top_k</span>]
+              <span class="keyword">return</span> list(chunks)
+            </div>
+          </div>
+
+          <div class="animate-in delay-3">
+            <h3 class="section-title">PDF Ingestion Pipeline</h3>
+            <div class="code-block">
+              <span class="keyword">import</span> fitz <span class="comment"># PyMuPDF</span>
+
+              <span class="keyword">def</span> <span class="func">ingest_pdf</span>(file_path, doc_instance):
+              <span class="keyword">with</span> fitz.<span class="func">open</span>(file_path) <span
+                class="keyword">as</span> pdf:
+              <span class="keyword">for</span> page_num <span class="keyword">in</span> range(len(pdf)):
+              text = pdf[page_num].<span class="func">get_text</span>(<span class="string">"text"</span>)
+              chunks = <span class="func">chunk_text</span>(text)
+              <span class="keyword">for</span> chunk <span class="keyword">in</span> chunks:
+              embedding = <span class="func">get_embedding</span>(chunk)
+              Chunk.objects.<span class="func">create</span>(
+              document=doc_instance,
+              page_number=page_num + <span class="type">1</span>,
+              content=chunk,
+              embedding=embedding
+              )
+            </div>
+
+            <h3 class="section-title mt-30">Database Schema (pgvector)</h3>
+            <div class="code-block">
+              <span class="keyword">CREATE TABLE</span> <span class="type">documents</span> (
+              id <span class="type">BIGSERIAL PRIMARY KEY</span>,
+              title <span class="type">TEXT</span>,
+              category <span class="type">TEXT</span>,
+              file <span class="type">TEXT</span>,
+              uploaded_at <span class="type">TIMESTAMP</span>
+              );
+
+              <span class="keyword">CREATE TABLE</span> <span class="type">chunks</span> (
+              id <span class="type">BIGSERIAL PRIMARY KEY</span>,
+              document_id <span class="type">BIGINT REFERENCES</span> documents,
+              page_number <span class="type">INT</span>,
+              content <span class="type">TEXT</span>,
+              embedding <span class="type">VECTOR(384)</span> <span class="comment">-- pgvector</span>
+              );
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═════════════════════════════════════════════ -->
+    <!-- SLIDE 7: Expected Outcomes                     -->
+    <!-- ═════════════════════════════════════════════ -->
+    <div class="slide" data-slide="6">
+      <div class="full-width">
+        <div class="animate-in delay-1">
+          <span class="slide-tag green">
+            <span class="material-symbols-outlined" style="font-size:14px">check_circle</span>
+            Expected Outcomes
+          </span>
+          <h2 class="slide-title">What This System Delivers</h2>
+        </div>
+
+        <div class="card-grid cols-3 mt-20 animate-in delay-2">
+          <div class="card">
+            <div class="card-icon blue"><span class="material-symbols-outlined">chat</span></div>
+            <h4>Accurate Safety Q&A</h4>
+            <p>Workers get <b>precise, citation-backed answers</b> to safety questions from approved SOPs within seconds
+              — not minutes of manual searching.</p>
+          </div>
+          <div class="card">
+            <div class="card-icon rose"><span class="material-symbols-outlined">gpp_bad</span></div>
+            <h4>Zero Hallucination</h4>
+            <p>The system refuses to answer with fabricated information. If the answer isn't in the manuals, it says so
+              — protecting workers from false guidance.</p>
+          </div>
+          <div class="card">
+            <div class="card-icon green"><span class="material-symbols-outlined">verified</span></div>
+            <h4>Auditable Source Trail</h4>
+            <p>Every response includes the <b>exact document name and page number</b>, enabling regulatory compliance
+              and supervisor verification.</p>
+          </div>
+        </div>
+
+        <div class="card-grid cols-3 mt-20 animate-in delay-3">
+          <div class="card">
+            <div class="card-icon amber"><span class="material-symbols-outlined">cloud_off</span></div>
+            <h4>Offline Operation</h4>
+            <p>Runs entirely on local hardware via Ollama. <b>No internet needed</b> after initial setup — perfect for
+              underground mine sites.</p>
+          </div>
+          <div class="card">
+            <div class="card-icon violet"><span class="material-symbols-outlined">admin_panel_settings</span></div>
+            <h4>Self-Service Admin</h4>
+            <p>Safety officers can <b>upload, delete, and re-index PDFs</b> through the Django Admin and React document
+              portal — no developer needed.</p>
+          </div>
+          <div class="card">
+            <div class="card-icon blue"><span class="material-symbols-outlined">speed</span></div>
+            <h4>Sub-Minute Response</h4>
+            <p>The pgvector cosine search + local LLM pipeline delivers answers in <b>under 30 seconds</b> on consumer
+              hardware (8GB RAM).</p>
+          </div>
+        </div>
+
+        <div class="card-grid cols-4 mt-20 animate-in delay-4">
+          <div class="stat-box">
+            <div class="stat-value">384d</div>
+            <div class="stat-label">Embedding Dimensions</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-value">Top-4</div>
+            <div class="stat-label">Chunks Retrieved</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-value">700</div>
+            <div class="stat-label">Chars per Chunk</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-value">3B</div>
+            <div class="stat-label">LLM Parameters</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═════════════════════════════════════════════ -->
+    <!-- SLIDE 8: Demonstration                         -->
+    <!-- ═════════════════════════════════════════════ -->
+    <div class="slide" data-slide="7">
+      <div class="full-width">
+        <div class="animate-in delay-1">
+          <span class="slide-tag amber">
+            <span class="material-symbols-outlined" style="font-size:14px">play_circle</span>
+            Demonstration & Features
+          </span>
+          <h2 class="slide-title">Live Demo Walkthrough</h2>
+        </div>
+
+        <div class="two-col mt-20">
+          <div class="animate-in delay-2">
+            <h3 class="section-title">Demo Scenario</h3>
+            <div class="card" style="border-left: 3px solid var(--accent-amber); margin-bottom: 16px">
+              <h4
+                style="color: var(--accent-amber); font-size: 13px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px">
+                User Query</h4>
+              <p style="font-size: 16px; color: var(--text-primary); font-weight: 600; line-height: 1.5">
+                "What should workers do if a methane leak is detected?"
+              </p>
+            </div>
+
+            <div class="card" style="border-left: 3px solid var(--accent-green)">
+              <h4
+                style="color: var(--accent-green); font-size: 13px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px">
+                System Response</h4>
+              <p style="font-size: 14px; color: var(--text-primary); line-height: 1.7">
+                "Workers should immediately cease operations, notify the supervisor, and follow the evacuation route as
+                specified in the Emergency Evacuation Manual…"
+              </p>
+              <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border)">
+                <span
+                  style="font-size: 11px; font-weight: 700; color: var(--accent-green); text-transform: uppercase; letter-spacing: 1px">📄
+                  Source</span>
+                <p style="font-size: 13px; margin-top: 4px">Emergency_Evacuation_Manual.pdf — <b>Page 11</b></p>
+              </div>
+            </div>
+
+            <div class="mt-20">
+              <h3 class="section-title">Application Features</h3>
+              <ol class="numbered-list">
+                <li><b>Safety Chat Interface:</b> Premium glassmorphism dark-mode UI with real-time chat</li>
+                <li><b>Document Management:</b> Upload, delete, and re-index safety PDFs</li>
+                <li><b>User Auth:</b> Login & registration via Django backend</li>
+                <li><b>Emergency SOS Protocol:</b> One-click emergency alert system with evacuation checklist</li>
+                <li><b>Source Citations:</b> Every answer shows the referenced document + page</li>
+              </ol>
+            </div>
+          </div>
+
+          <div class="animate-in delay-3">
+            <h3 class="section-title">How to Run (3 Terminals)</h3>
+            <div class="code-block mb-20">
+              <span class="comment"># Terminal 1: Start the Local LLM</span>
+              $ ollama run llama3.2:3b<br>
+
+              <span class="comment"># Terminal 2: Django Backend (port 8000)</span>
+              $ <span class="keyword">cd</span> rtd_project
+              $ python manage.py runserver<br>
+
+              <span class="comment"># Terminal 3: React Frontend (port 5173)</span>
+              $ <span class="keyword">cd</span> rtd_project/frontend
+              $ npm run dev
+            </div>
+
+            <h3 class="section-title">Project File Structure</h3>
+<pre class="code-block"><span class="type">mine_safety_assistant/</span>
+├── <span class="type">rag/</span>
+│   ├── models.py      <span class="comment"># Document &amp; Chunk ORM</span>
+│   ├── ingest.py      <span class="comment"># PDF text extraction</span>
+│   ├── chunking.py    <span class="comment"># Text splitting</span>
+│   ├── embeddings.py  <span class="comment"># BGE-small vectors</span>
+│   ├── retrieval.py   <span class="comment"># Cosine similarity</span>
+│   ├── llm.py         <span class="comment"># Ollama + prompt</span>
+│   └── admin.py       <span class="comment"># Auto-ingest on upload</span>
+├── <span class="type">chatbot/</span>
+│   └── views.py       <span class="comment"># REST API endpoints</span>
+├── <span class="type">frontend/src/</span>
+│   ├── App.tsx        <span class="comment"># Main React app</span>
+│   ├── components/    <span class="comment"># UI components</span>
+│   └── index.css      <span class="comment"># Design system</span>
+└── requirements.txt</pre>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═════════════════════════════════════════════ -->
+    <!-- SLIDE 9: Future Scope & Conclusion             -->
+    <!-- ═════════════════════════════════════════════ -->
+    <div class="slide" data-slide="8">
+      <div class="full-width">
+        <div class="animate-in delay-1">
+          <span class="slide-tag violet">
+            <span class="material-symbols-outlined" style="font-size:14px">rocket_launch</span>
+            Future Scope & Conclusion
+          </span>
+          <h2 class="slide-title">What's Next & Summary</h2>
+        </div>
+
+        <div class="two-col mt-20">
+          <div class="animate-in delay-2">
+            <h3 class="section-title">Future Enhancements</h3>
+            <div class="card-grid" style="grid-template-columns: 1fr; gap: 14px">
+              <div class="gap-item">
+                <div class="icon-wrap green"><span class="material-symbols-outlined">translate</span></div>
+                <div>
+                  <h5>Multi-Language Support</h5>
+                  <p>Support Hindi, Telugu, and other regional languages for wider adoption in Indian mines.</p>
+                </div>
+              </div>
+              <div class="gap-item">
+                <div class="icon-wrap green"><span class="material-symbols-outlined">mic</span></div>
+                <div>
+                  <h5>Voice-Based Querying</h5>
+                  <p>Enable speech-to-text input for workers wearing safety gloves or in noisy environments.</p>
+                </div>
+              </div>
+              <div class="gap-item">
+                <div class="icon-wrap green"><span class="material-symbols-outlined">phone_android</span></div>
+                <div>
+                  <h5>Mobile-First PWA</h5>
+                  <p>Deploy as a Progressive Web App for offline use on mobile devices underground.</p>
+                </div>
+              </div>
+              <div class="gap-item">
+                <div class="icon-wrap green"><span class="material-symbols-outlined">analytics</span></div>
+                <div>
+                  <h5>Safety Analytics Dashboard</h5>
+                  <p>Track most-queried topics to identify knowledge gaps and training needs across teams.</p>
+                </div>
+              </div>
+              <div class="gap-item">
+                <div class="icon-wrap green"><span class="material-symbols-outlined">model_training</span></div>
+                <div>
+                  <h5>Fine-Tuned Domain LLM</h5>
+                  <p>Fine-tune the local LLM on mine safety corpus for even more precise domain-specific answers.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="animate-in delay-3">
+            <h3 class="section-title">Conclusion</h3>
+            <div class="card" style="border: 1px solid rgba(56, 189, 248, 0.2); background: rgba(56, 189, 248, 0.03)">
+              <p style="font-size: 15px; line-height: 1.8; color: var(--text-secondary)">
+                The <b style="color: var(--text-primary)">Mine Safety RAG Assistant</b> successfully demonstrates that
+                Retrieval-Augmented Generation can provide <b style="color: var(--accent)">accurate, citation-backed,
+                  and hallucination-free</b> answers to safety-critical questions in mining, oil, and gas industries.
+              </p>
+              <p style="font-size: 15px; line-height: 1.8; color: var(--text-secondary); margin-top: 16px">
+                By running <b style="color: var(--text-primary)">entirely offline</b> with a local LLM (Ollama) and
+                using <b style="color: var(--text-primary)">Supabase pgvector</b> for semantic search, the system is
+                uniquely suited for deployment in connectivity-restricted mine environments.
+              </p>
+            </div>
+
+            <h3 class="section-title mt-30">Key Contributions</h3>
+            <ul class="bullet-list green">
+              <li>First RAG system specifically targeting mine/oil/gas safety SOP documents</li>
+              <li>Enforced hallucination prevention through constrained prompting</li>
+              <li>Complete source traceability for every generated answer</li>
+              <li>Fully offline architecture suitable for underground deployments</li>
+              <li>Admin self-service portal for non-technical safety officers</li>
+              <li>Emergency SOS protocol system with evacuation checklist</li>
+            </ul>
+
+            <h3 class="section-title mt-30">References</h3>
+            <div style="font-size: 12px; color: var(--text-muted); line-height: 2">
+              [1] Lewis et al., "Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks," NeurIPS 2020<br>
+              [2] Xiao et al., "C-Pack: Packed Resources for General Chinese Embeddings," arXiv 2023<br>
+              [3] Touvron et al., "LLaMA: Open and Efficient Foundation Language Models," Meta AI 2023<br>
+              [4] Johnson et al., "Billion-scale similarity search with GPUs," IEEE Big Data 2019<br>
+              [5] Supabase Documentation — pgvector Extension, 2024
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═════════════════════════════════════════════ -->
+    <!-- SLIDE 10: Thank You                            -->
+    <!-- ═════════════════════════════════════════════ -->
+    <div class="slide text-center" data-slide="9">
+      <div class="animate-in delay-1 thank-you-icon">
+        <span class="material-symbols-outlined">shield</span>
+      </div>
+      <h1 class="hero animate-in delay-2" style="font-size: 52px">Thank You</h1>
+      <p class="subtitle animate-in delay-3" style="max-width: 550px; margin-bottom: 30px">
+        The Mine Safety RAG Assistant is ready for demonstration.<br>
+        Questions and feedback are welcome.
+      </p>
+      <div style="display:flex; gap: 20px; justify-content:center; flex-wrap: wrap" class="animate-in delay-4">
+        <div class="stat-box" style="min-width: 180px">
+          <div class="stat-value" style="font-size: 22px">Django + React</div>
+          <div class="stat-label">Full-Stack Architecture</div>
+        </div>
+        <div class="stat-box" style="min-width: 180px">
+          <div class="stat-value" style="font-size: 22px">Ollama</div>
+          <div class="stat-label">Local Offline LLM</div>
+        </div>
+        <div class="stat-box" style="min-width: 180px">
+          <div class="stat-value" style="font-size: 22px">pgvector</div>
+          <div class="stat-label">Semantic Vector Search</div>
+        </div>
+      </div>
+      <p style="font-size: 13px; color: var(--text-muted); margin-top: 40px" class="animate-in delay-5">
+        🎓 Project built with Python, TypeScript, PostgreSQL, and LangChain
+      </p>
+    </div>
+
+  </div>
+
+  <!-- Navigation Bar -->
+  <div class="nav-bar">
+    <div class="nav-info">
+      Slide <span class="current" id="currentSlide">1</span> / <span id="totalSlides">10</span>
+    </div>
+    <div class="nav-progress">
+      <div class="nav-progress-bar" id="progressBar" style="width: 10%"></div>
+    </div>
+    <div class="nav-buttons">
+      <button class="nav-btn" id="prevBtn" disabled onclick="prevSlide()">
+        <span class="material-symbols-outlined">chevron_left</span>
+      </button>
+      <button class="nav-btn" id="nextBtn" onclick="nextSlide()">
+        <span class="material-symbols-outlined">chevron_right</span>
+      </button>
+      <button class="fullscreen-btn" id="fullscreenBtn" onclick="toggleFullscreen()" title="Fullscreen (F)">
+        <span class="material-symbols-outlined" id="fsIcon">fullscreen</span>
+      </button>
+    </div>
+  </div>
+
+  <div class="key-hint">
+    Use <kbd>←</kbd> <kbd>→</kbd> arrow keys &nbsp;|&nbsp; <kbd>F</kbd> fullscreen
+  </div>
+
+  <script>
+    let currentIndex = 0;
+    const slides = document.querySelectorAll('.slide');
+    const totalSlides = slides.length;
+
+    document.getElementById('totalSlides').textContent = totalSlides;
+
+    function showSlide(index) {
+      slides.forEach((slide, i) => {
+        slide.classList.remove('active', 'exit');
+        if (i < index) slide.classList.add('exit');
+      });
+      slides[index].classList.add('active');
+
+      document.getElementById('currentSlide').textContent = index + 1;
+      document.getElementById('progressBar').style.width = ((index + 1) / totalSlides * 100) + '%';
+      document.getElementById('prevBtn').disabled = index === 0;
+      document.getElementById('nextBtn').disabled = index === totalSlides - 1;
+    }
+
+    function nextSlide() {
+      if (currentIndex < totalSlides - 1) {
+        currentIndex++;
+        showSlide(currentIndex);
+      }
+    }
+
+    function prevSlide() {
+      if (currentIndex > 0) {
+        currentIndex--;
+        showSlide(currentIndex);
+      }
+    }
+
+    // Fullscreen API
+    function toggleFullscreen() {
+      if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+        const el = document.documentElement;
+        if (el.requestFullscreen) el.requestFullscreen();
+        else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+      } else {
+        if (document.exitFullscreen) document.exitFullscreen();
+        else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+      }
+    }
+
+    // Update icon when fullscreen changes
+    document.addEventListener('fullscreenchange', updateFsIcon);
+    document.addEventListener('webkitfullscreenchange', updateFsIcon);
+    function updateFsIcon() {
+      const icon = document.getElementById('fsIcon');
+      if (document.fullscreenElement || document.webkitFullscreenElement) {
+        icon.textContent = 'fullscreen_exit';
+      } else {
+        icon.textContent = 'fullscreen';
+      }
+    }
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); nextSlide(); }
+      if (e.key === 'ArrowLeft') { e.preventDefault(); prevSlide(); }
+      if (e.key === 'Home') { e.preventDefault(); currentIndex = 0; showSlide(0); }
+      if (e.key === 'End') { e.preventDefault(); currentIndex = totalSlides - 1; showSlide(currentIndex); }
+      if (e.key === 'f' || e.key === 'F') { e.preventDefault(); toggleFullscreen(); }
+    });
+
+    // Touch swipe support
+    let touchStartX = 0;
+    document.addEventListener('touchstart', (e) => { touchStartX = e.touches[0].clientX; });
+    document.addEventListener('touchend', (e) => {
+      const diff = touchStartX - e.changedTouches[0].clientX;
+      if (Math.abs(diff) > 50) {
+        if (diff > 0) nextSlide();
+        else prevSlide();
+      }
+    });
+  </script>
+
+</body>
+
+</html>
